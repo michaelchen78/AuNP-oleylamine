@@ -1,0 +1,6 @@
+approx eq2 point is 315000 which is at step 61
+Average PE: -1467.8956017813766
+Average Coordination Number: 204.17267206477732
+
+std=5.61016256616313
+distribution: [202 203 202 ... 210 208 204][  315000   320000   325000 ... 25000000 25005000 25010000]
