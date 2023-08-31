@@ -1,0 +1,46 @@
+
+read_restart	save.
+
+variable 		movie equal 500000
+vairable		output equal 5000
+variable		solvent equal 0.2  #0.2 is a good solvent, 0.5 is a bad solvent, 1.0 is no solvent/vacuum 
+variable		np_rad equal 25.0  #NP radius in Angstrom (= 0.1 nm)
+variable        	coor_del equal 3.0  # in order for a ligand to be considered to be bound, it must be within this radius of the edge of the NP VDW
+variable 		E_bind equal 20.0  #ligand-NP binding energy in kcal/mol
+variable		Lbox equal 150.0   #edge length of cubic simulation box
+variable 		Nlig equal 600	   #number of ligands 
+variable		seed equal 314159
+variable		trajsteps equal 10	 #number of timesteps (length of simulation)
+restart			50000000 save
+# assumes equilibration has passed, so only does production run
+
+region 			box block 0 ${Lbox} 0 ${Lbox} 0 ${Lbox} units box
+region			box_with_hole sphere $(v_Lbox/2) $(v_Lbox/2) $(v_Lbox/2) $(v_np_rad+5.0) side out units box 
+
+#molecule		lig ligand.mol  # for special neighbors?
+#molecule		hex hexane.mol
+
+#PRODUCTION RUN RESTARTED
+fix 			1 ligands nve
+fix			2 ligands langevin 300 300 1000 12345
+
+thermo 			${output}
+
+dump      		2 all custom ${movie} pos2.lammpstrj type x y z
+dump_modify		2 sort id
+dump			2. all custom ${output} pos2_long.lammpstrj type x y z
+dump_modify		2. sort id
+
+# count coordination number of NP
+compute coords nps coord/atom cutoff $(v_np_rad + v_coor_del) 2
+dump 3 nps custom ${output} coords.dmp c_coords
+
+# second shell
+compute coords2 nps coord/atom cutoff 35 2
+dump 4 nps custom ${output} coords2.dmp c_coords2
+
+
+
+run				${trajsteps}
+
+# only uncertain things are: create_box, create_atoms
